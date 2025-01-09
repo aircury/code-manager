@@ -1,0 +1,9 @@
+services:
+  app:
+    container_name: code_manager
+    build: .
+    volumes:
+      - .:/app
+    tty: true
+    healthcheck:
+      test: pwd | exit 1
