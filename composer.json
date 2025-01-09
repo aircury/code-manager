@@ -1,0 +1,12 @@
+{
+    "name": "aircury/code-manager",
+    "description": "CodeManager - a tool to improve your code",
+    "type": "project",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "Aircury\\CodeManager\\": "src/"
+        }
+    },
+    "require": {}
+}
