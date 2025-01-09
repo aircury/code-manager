@@ -8,5 +8,7 @@
             "Aircury\\CodeManager\\": "src/"
         }
     },
-    "require": {}
+    "require": {
+        "symfony/console": "^7.2"
+    }
 }
