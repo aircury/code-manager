@@ -8,6 +8,7 @@ return (new PhpCsFixer\Config())
         'declare_strict_types' => true,
         'linebreak_after_opening_tag' => false,
         'blank_line_after_opening_tag' => false,
+        'phpdoc_to_property_type' => true,
         'increment_style' => ['style' => 'post'],
     ])
     ->setRiskyAllowed(true)
