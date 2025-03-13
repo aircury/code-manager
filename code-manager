@@ -1,7 +1,32 @@
 #!/usr/bin/env php
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+$possibleAutoloadPaths = [
+    __DIR__ . '/../../autoload.php',
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/vendor/autoload.php'
+];
+
+foreach ($possibleAutoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        define('PHPUNIT_COMPOSER_INSTALL', $autoloadPath);
+
+        break;
+    }
+}
+
+if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
+    fwrite(
+        STDERR,
+        'You need to set up the project dependencies using Composer:' . PHP_EOL . PHP_EOL .
+        '    composer install' . PHP_EOL . PHP_EOL .
+        'You can learn all about Composer on https://getcomposer.org/.' . PHP_EOL
+    );
+
+    die(1);
+}
+
+require_once PHPUNIT_COMPOSER_INSTALL;
 
 use Aircury\CodeManager\Application;
 
