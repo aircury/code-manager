@@ -14,7 +14,7 @@ class CodeFormatterManager
     private const string CONFIG_FILE_COMMAND_OPTION = '--config';
     private const string QUIET_COMMAND_OPTION = '--quiet';
     private const string COMMAND_SEPARATOR = ' ';
-    private const string CONFIGURATION_FILE = 'src/CodeFormatter/CodeFormatterConfiguration.php';
+    private const string CONFIGURATION_FILE = 'CodeFormatterConfiguration.php';
 
     /**
      * @param array<string> $files
@@ -49,7 +49,9 @@ class CodeFormatterManager
     {
         $commandOptions = [];
 
-        $commandOptions[] = sprintf('%s=%s', self::CONFIG_FILE_COMMAND_OPTION, self::CONFIGURATION_FILE);
+        $configurationFile = self::getConfigurationFile();
+
+        $commandOptions[] = sprintf('%s=%s', self::CONFIG_FILE_COMMAND_OPTION, $configurationFile);
 
         if ($output->isQuiet()) {
             $commandOptions[] = self::QUIET_COMMAND_OPTION;
@@ -60,5 +62,16 @@ class CodeFormatterManager
         }
 
         return implode(self::COMMAND_SEPARATOR, $commandOptions);
+    }
+
+    private static function getConfigurationFile(): string
+    {
+        $configurationFile = sprintf('%s%s%s', __DIR__, DIRECTORY_SEPARATOR, self::CONFIGURATION_FILE);
+
+        if (file_exists($configurationFile)) {
+            return $configurationFile;
+        }
+
+        throw new \LogicException('Configuration file not found');
     }
 }

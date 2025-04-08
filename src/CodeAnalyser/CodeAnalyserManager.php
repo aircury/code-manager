@@ -13,7 +13,7 @@ class CodeAnalyserManager
     private const string LEVEL_COMMAND_OPTION = '--level';
     private const string QUIET_COMMAND_OPTION = '--quiet';
     private const string COMMAND_SEPARATOR = ' ';
-    private const string CONFIGURATION_FILE = 'src/CodeAnalyser/phpstan.neon';
+    private const string CONFIGURATION_FILE = 'phpstan.neon';
 
     /**
      * @param array<string> $files
@@ -42,7 +42,9 @@ class CodeAnalyserManager
     {
         $commandOptions = [];
 
-        $commandOptions[] = sprintf('%s=%s', self::CONFIG_FILE_COMMAND_OPTION, self::CONFIGURATION_FILE);
+        $configurationFile = self::getConfigurationFile();
+
+        $commandOptions[] = sprintf('%s=%s', self::CONFIG_FILE_COMMAND_OPTION, $configurationFile);
 
         if ($output->isQuiet()) {
             $commandOptions[] = self::QUIET_COMMAND_OPTION;
@@ -57,5 +59,16 @@ class CodeAnalyserManager
         }
 
         return implode(self::COMMAND_SEPARATOR, $commandOptions);
+    }
+
+    private static function getConfigurationFile(): string
+    {
+        $configurationFile = sprintf('%s%s%s', __DIR__, DIRECTORY_SEPARATOR, self::CONFIGURATION_FILE);
+
+        if (file_exists($configurationFile)) {
+            return $configurationFile;
+        }
+
+        throw new \LogicException('Configuration file not found');
     }
 }
