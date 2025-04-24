@@ -15,7 +15,7 @@ class CodeAnalyserCommandConfigurator
     {
         $command
             ->addArgument(self::FILES_ARGUMENT, InputArgument::IS_ARRAY, 'Specify files that you want to format')
-            ->addOption(self::BRANCH_FORMAT_OPTION, 'b', InputOption::VALUE_REQUIRED, 'Run the formatter in your branch new files relative to master')
+            ->addOption(self::BRANCH_FORMAT_OPTION, 'b', InputOption::VALUE_REQUIRED, 'Run the formatter in your branch new files relative to the specified branch')
             ->addOption(self::LEVEL_OPTION, 'l', InputOption::VALUE_OPTIONAL, 'Specify level to run the analyser')
         ;
     }
