@@ -9,7 +9,7 @@ class GitFilesManager
      */
     public static function getCurrentChangedFiles(): array
     {
-        exec("git diff --relative --name-only HEAD | grep '.*\.php$' | cat", output: $changedFiles);
+        exec("git diff --relative --name-only HEAD | grep -E '.*\.(php|yaml|yml)$' | cat", output: $changedFiles);
 
         return $changedFiles;
     }
@@ -19,7 +19,7 @@ class GitFilesManager
      */
     public static function getCurrentBranchFiles(string $baseBranch): array
     {
-        exec("git diff --relative --name-only $baseBranch... | grep '.*\.php$' | cat", output: $changedFiles);
+        exec("git diff --relative --name-only $baseBranch... | grep -E '.*\.(php|yaml|yml)$' | cat", output: $changedFiles);
 
         return $changedFiles;
     }
