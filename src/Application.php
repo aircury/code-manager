@@ -1,10 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Aircury\CodeManager;
 
 use Aircury\CodeManager\CodeAnalyser\CodeAnalyserCommand;
 use Aircury\CodeManager\CodeFormatter\CodeFormatterCommand;
 use Aircury\CodeManager\NamespaceChecker\NamespaceCheckerCommand;
+use Aircury\CodeManager\YamlFormatter\YamlFormatterCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
 class Application extends BaseApplication
@@ -14,6 +15,7 @@ class Application extends BaseApplication
         CodeFormatterCommand::class,
         CodeAnalyserCommand::class,
         NamespaceCheckerCommand::class,
+        YamlFormatterCommand::class,
     ];
 
     public function __construct()
