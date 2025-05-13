@@ -13,7 +13,7 @@ class CodeAnalyserManager
     private const string LEVEL_COMMAND_OPTION = '--level';
     private const string QUIET_COMMAND_OPTION = '--quiet';
     private const string COMMAND_SEPARATOR = ' ';
-    private const string CONFIGURATION_FILE = 'phpstan.neon';
+    private const string CONFIGURATION_FILE = 'phpstan.neon.php';
 
     /**
      * @param array<string> $files
