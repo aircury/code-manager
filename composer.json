@@ -11,6 +11,7 @@
     "require": {
         "symfony/console": "~6.0|~7.0",
         "phpstan/phpstan": "~1.0|~2.0",
+        "phpstan/phpstan-doctrine": "^2.0",
         "friendsofphp/php-cs-fixer": "~3.46",
         "symfony/yaml": "~6.0|~7.0"
     },
