@@ -88,3 +88,22 @@ This command:
 - Optimizes the autoloader
 - Checks namespace rules
 - Returns success (0) or failure (1) status code
+
+### yaml:format
+
+Formats YAML files according to specified rules.
+
+```bash
+bin/code-manager yaml:format [options]
+```
+
+This command:
+- Automatically formats YAML files
+- Maintains consistent indentation
+- Optimizes YAML structure
+
+Options:
+- `--indent` or `-i` - Number of spaces for indentation (default: 2)
+- `--inline` or `-l` - Level where to switch to inline YAML (default: 2)
+
+The command will automatically detect and format all YAML files (`.yaml` or `.yml`) that have been changed in your current branch.
