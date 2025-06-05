@@ -232,9 +232,20 @@ class NamespaceCheckerCommand extends Command
         }
 
         $files = [];
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS)
+        $directoryIterator = new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS);
+        
+        $filteredIterator = new \RecursiveCallbackFilterIterator(
+            $directoryIterator,
+            function ($current, $key, $iterator) {
+                if ($iterator->hasChildren()) {
+                    $dirname = $current->getFilename();
+                    return !in_array($dirname, ['var', 'vendor']);
+                }
+                return true;
+            }
         );
+        
+        $iterator = new \RecursiveIteratorIterator($filteredIterator);
 
         foreach ($iterator as $file) {
             if ($file->getExtension() === 'php') {
