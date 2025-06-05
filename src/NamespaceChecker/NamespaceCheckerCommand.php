@@ -5,6 +5,7 @@ namespace Aircury\CodeManager\NamespaceChecker;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -20,6 +21,12 @@ class NamespaceCheckerCommand extends Command
                 InputArgument::OPTIONAL,
                 'The root directory of the project to analyze',
                 '.'
+            )
+            ->addOption(
+                'fix',
+                null,
+                InputOption::VALUE_NONE,
+                'Automatically fix namespace mismatches'
             );
     }
 
@@ -27,8 +34,12 @@ class NamespaceCheckerCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $projectRoot = $this->resolveProjectRoot($input->getArgument('project-root'));
+        $shouldFix = $input->getOption('fix');
 
         $io->writeln("Analyzing PSR-4 compliance for project: {$projectRoot}");
+        if ($shouldFix) {
+            $io->writeln('Auto-fix mode enabled - will correct namespace mismatches');
+        }
 
         $composerData = $this->loadComposerData($projectRoot);
         if (!$composerData) {
@@ -42,9 +53,9 @@ class NamespaceCheckerCommand extends Command
             return Command::SUCCESS;
         }
 
-        $violations = $this->analyzePhpFiles($psr4Mappings, $projectRoot, $io);
+        $violations = $this->analyzePhpFiles($psr4Mappings, $projectRoot, $io, $shouldFix);
 
-        $this->reportResults($violations, $io);
+        $this->reportResults($violations, $io, $shouldFix);
 
         return empty($violations) ? Command::SUCCESS : Command::FAILURE;
     }
@@ -89,9 +100,10 @@ class NamespaceCheckerCommand extends Command
         return $mappings;
     }
 
-    private function analyzePhpFiles(array $psr4Mappings, string $projectRoot, SymfonyStyle $io): array
+    private function analyzePhpFiles(array $psr4Mappings, string $projectRoot, SymfonyStyle $io, bool $shouldFix): array
     {
         $violations = [];
+        $fixed = [];
         $allFiles = $this->findAllPhpFiles($psr4Mappings, $projectRoot);
         $totalFiles = count($allFiles);
 
@@ -109,11 +121,21 @@ class NamespaceCheckerCommand extends Command
             );
             
             if ($violation) {
+                if ($shouldFix && $violation['issue'] === 'Namespace mismatch') {
+                    $fixResult = $this->fixNamespaceInFile($file, $violation['expected']);
+                    if ($fixResult) {
+                        $fixed[] = $violation;
+                        continue;
+                    }
+                }
                 $violations[] = $violation;
             }
         }
 
         $io->writeln("Analyzed {$totalFiles} PHP files");
+        if (!empty($fixed)) {
+            $io->writeln("Fixed " . count($fixed) . " namespace mismatches");
+        }
 
         return $violations;
     }
@@ -254,15 +276,58 @@ class NamespaceCheckerCommand extends Command
         return substr($realFilePath, strlen($realBaseDirectory) + 1);
     }
 
-    private function reportResults(array $violations, SymfonyStyle $io): void
+    private function fixNamespaceInFile(string $filePath, string $expectedNamespace): bool
+    {
+        $content = file_get_contents($filePath);
+        
+        $updatedContent = preg_replace(
+            '/^namespace\s+[^;]+;/m',
+            "namespace {$expectedNamespace};",
+            $content,
+            1,
+            $count
+        );
+        
+        if ($count > 0 && $updatedContent !== $content) {
+            return file_put_contents($filePath, $updatedContent) !== false;
+        }
+        
+        return false;
+    }
+
+    private function reportResults(array $violations, SymfonyStyle $io, bool $shouldFix): void
     {
         if (empty($violations)) {
             $io->success('All files comply with PSR-4 namespace rules!');
             return;
         }
 
-        $io->error(sprintf('Found %d PSR-4 compliance violations:', count($violations)));
+        $fixableViolations = array_filter($violations, fn($v) => $v['issue'] === 'Namespace mismatch');
+        $unfixableViolations = array_filter($violations, fn($v) => $v['issue'] !== 'Namespace mismatch');
 
+        if (!empty($fixableViolations)) {
+            if ($shouldFix) {
+                $io->error(sprintf('Found %d PSR-4 compliance violations that could not be automatically fixed:', count($fixableViolations)));
+            } else {
+                $io->warning(sprintf('Found %d namespace mismatches that can be automatically fixed with --fix option:', count($fixableViolations)));
+            }
+
+            $this->displayViolationsTable($fixableViolations, $io);
+        }
+
+        if (!empty($unfixableViolations)) {
+            $io->error(sprintf('Found %d violations that require manual attention:', count($unfixableViolations)));
+            $this->displayViolationsTable($unfixableViolations, $io);
+        }
+
+        if (!$shouldFix && !empty($fixableViolations)) {
+            $io->writeln('');
+            $io->writeln('<info>💡 Tip: Run with --fix to automatically correct namespace mismatches</info>');
+        }
+    }
+
+    private function displayViolationsTable(array $violations, SymfonyStyle $io): void
+    {
         $tableData = [];
         foreach ($violations as $violation) {
             $tableData[] = [
