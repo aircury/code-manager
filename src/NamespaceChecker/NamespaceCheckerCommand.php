@@ -90,11 +90,23 @@ class NamespaceCheckerCommand extends Command
         $mappings = [];
         
         if (isset($composerData['autoload']['psr-4'])) {
-            $mappings = array_merge($mappings, $composerData['autoload']['psr-4']);
+            foreach ($composerData['autoload']['psr-4'] as $namespace => $directory) {
+                $key = $namespace . '::autoload::' . $directory;
+                $mappings[$key] = [
+                    'namespace' => $namespace,
+                    'directory' => $directory
+                ];
+            }
         }
         
         if (isset($composerData['autoload-dev']['psr-4'])) {
-            $mappings = array_merge($mappings, $composerData['autoload-dev']['psr-4']);
+            foreach ($composerData['autoload-dev']['psr-4'] as $namespace => $directory) {
+                $key = $namespace . '::autoload-dev::' . $directory;
+                $mappings[$key] = [
+                    'namespace' => $namespace,
+                    'directory' => $directory
+                ];
+            }
         }
         
         return $mappings;
@@ -145,9 +157,20 @@ class NamespaceCheckerCommand extends Command
         $allFiles = [];
         $processedDirs = [];
 
-        foreach ($psr4Mappings as $directory) {
-            $fullDirectory = $projectRoot . '/' . ltrim($directory, '/');
-            $fullDirectory = rtrim($fullDirectory, '/');
+        foreach ($psr4Mappings as $mapping) {
+            $directory = $mapping['directory'];
+            
+            if ($directory === './' || $directory === '.') {
+                $fullDirectory = $projectRoot;
+            } else {
+                $fullDirectory = $projectRoot . '/' . ltrim($directory, '/');
+                $fullDirectory = rtrim($fullDirectory, '/');
+            }
+            
+            if (!is_dir($fullDirectory)) {
+                continue;
+            }
+            
             $realPath = realpath($fullDirectory);
             
             if (!$realPath || in_array($realPath, $processedDirs)) {
@@ -167,9 +190,17 @@ class NamespaceCheckerCommand extends Command
         $bestMatch = null;
         $longestPath = 0;
 
-        foreach ($psr4Mappings as $namespacePrefix => $directory) {
-            $fullDirectory = $projectRoot . '/' . ltrim($directory, '/');
-            $fullDirectory = rtrim($fullDirectory, '/');
+        foreach ($psr4Mappings as $mapping) {
+            $namespacePrefix = $mapping['namespace'];
+            $directory = $mapping['directory'];
+            
+            if ($directory === './' || $directory === '.') {
+                $fullDirectory = $projectRoot;
+            } else {
+                $fullDirectory = $projectRoot . '/' . ltrim($directory, '/');
+                $fullDirectory = rtrim($fullDirectory, '/');
+            }
+            
             $realDirectory = realpath($fullDirectory);
             
             if (!$realDirectory) {
