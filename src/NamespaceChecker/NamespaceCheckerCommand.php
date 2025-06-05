@@ -76,7 +76,17 @@ class NamespaceCheckerCommand extends Command
 
     private function extractPsr4Mappings(array $composerData): array
     {
-        return $composerData['autoload']['psr-4'] ?? [];
+        $mappings = [];
+        
+        if (isset($composerData['autoload']['psr-4'])) {
+            $mappings = array_merge($mappings, $composerData['autoload']['psr-4']);
+        }
+        
+        if (isset($composerData['autoload-dev']['psr-4'])) {
+            $mappings = array_merge($mappings, $composerData['autoload-dev']['psr-4']);
+        }
+        
+        return $mappings;
     }
 
     private function analyzePhpFiles(array $psr4Mappings, string $projectRoot, SymfonyStyle $io): array
