@@ -57,12 +57,14 @@ class CodeToolManager
         }
     }
 
-    public static function executeCommand(string $command): void
+    public static function executeCommand(string $command): int
     {
         $process = proc_open($command, [\STDIN, \STDOUT, \STDERR], $pipes);
 
-        if (false !== $process) {
-            proc_close($process);
+        if (false === $process) {
+            return 1;
         }
+
+        return proc_close($process);
     }
 }

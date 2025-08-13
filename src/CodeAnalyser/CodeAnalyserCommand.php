@@ -31,14 +31,16 @@ class CodeAnalyserCommand extends Command
 
             $command = CodeAnalyserManager::getCommand($input, $output, $files);
 
-            CodeToolManager::executeCommand($command);
+            $exitCode = CodeToolManager::executeCommand($command);
+
+            if (0 !== $exitCode) {
+                return $exitCode;
+            }
         } catch (\Exception $exception) {
             $io->error($exception->getMessage());
 
             return Command::FAILURE;
         }
-
-        $io->success('Code analyser run successfully');
 
         return Command::SUCCESS;
     }

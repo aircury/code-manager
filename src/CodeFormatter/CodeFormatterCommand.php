@@ -31,7 +31,13 @@ class CodeFormatterCommand extends Command
 
             $command = CodeFormatterManager::getCommand($input, $output, $files);
 
-            CodeToolManager::executeCommand($command);
+            $exitCode = CodeToolManager::executeCommand($command);
+
+            if (0 !== $exitCode) {
+                $io->error(\sprintf('Code formatter failed: %s', $this->getExitCodeMessage($exitCode)));
+
+                return $exitCode;
+            }
         } catch (\Exception $exception) {
             $io->error($exception->getMessage());
 
@@ -41,6 +47,19 @@ class CodeFormatterCommand extends Command
         $io->success('Code formatter run successfully');
 
         return Command::SUCCESS;
+    }
+
+    private function getExitCodeMessage(int $exitCode): string
+    {
+        return match ($exitCode) {
+            1 => 'General error occurred or PHP minimal requirement not met',
+            4 => 'Some files have invalid syntax',
+            8 => 'Some files need fixing',
+            16 => 'Configuration error of the application',
+            32 => 'Configuration error of a Fixer',
+            64 => 'Exception raised within the application',
+            default => 'Unknown error occurred',
+        };
     }
 
     /**
