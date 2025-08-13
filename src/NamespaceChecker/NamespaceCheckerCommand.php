@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Aircury\CodeManager\NamespaceChecker;
 
@@ -11,6 +11,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NamespaceCheckerCommand extends Command
 {
+    private const EXCLUDED_FILES = [
+        'bootstrap.php',
+        'phpstan.neon.php',
+        'CodeFormatterConfiguration.php',
+        'multi_connector_test_1.php',
+    ];
+
     protected function configure(): void
     {
         $this
@@ -44,12 +51,14 @@ class NamespaceCheckerCommand extends Command
         $composerData = $this->loadComposerData($projectRoot);
         if (!$composerData) {
             $io->error('Could not load composer.json from project root');
+
             return Command::FAILURE;
         }
 
         $psr4Mappings = $this->extractPsr4Mappings($composerData);
         if (empty($psr4Mappings)) {
             $io->warning('No PSR-4 mappings found in composer.json');
+
             return Command::SUCCESS;
         }
 
@@ -62,12 +71,12 @@ class NamespaceCheckerCommand extends Command
 
     private function resolveProjectRoot(string $projectRoot): string
     {
-        if ($projectRoot === '.') {
+        if ('.' === $projectRoot) {
             return getcwd();
         }
 
         if (!str_starts_with($projectRoot, '/')) {
-            return getcwd() . '/' . $projectRoot;
+            return getcwd().'/'.$projectRoot;
         }
 
         return $projectRoot;
@@ -75,40 +84,41 @@ class NamespaceCheckerCommand extends Command
 
     private function loadComposerData(string $projectRoot): ?array
     {
-        $composerPath = $projectRoot . '/composer.json';
-        
+        $composerPath = $projectRoot.'/composer.json';
+
         if (!file_exists($composerPath)) {
             return null;
         }
 
         $content = file_get_contents($composerPath);
+
         return json_decode($content, true);
     }
 
     private function extractPsr4Mappings(array $composerData): array
     {
         $mappings = [];
-        
+
         if (isset($composerData['autoload']['psr-4'])) {
             foreach ($composerData['autoload']['psr-4'] as $namespace => $directory) {
-                $key = $namespace . '::autoload::' . $directory;
+                $key = $namespace.'::autoload::'.$directory;
                 $mappings[$key] = [
                     'namespace' => $namespace,
-                    'directory' => $directory
+                    'directory' => $directory,
                 ];
             }
         }
-        
+
         if (isset($composerData['autoload-dev']['psr-4'])) {
             foreach ($composerData['autoload-dev']['psr-4'] as $namespace => $directory) {
-                $key = $namespace . '::autoload-dev::' . $directory;
+                $key = $namespace.'::autoload-dev::'.$directory;
                 $mappings[$key] = [
                     'namespace' => $namespace,
-                    'directory' => $directory
+                    'directory' => $directory,
                 ];
             }
         }
-        
+
         return $mappings;
     }
 
@@ -117,23 +127,23 @@ class NamespaceCheckerCommand extends Command
         $violations = [];
         $fixed = [];
         $allFiles = $this->findAllPhpFiles($psr4Mappings, $projectRoot);
-        $totalFiles = count($allFiles);
+        $totalFiles = \count($allFiles);
 
         foreach ($allFiles as $file) {
             $applicableMapping = $this->findApplicableMapping($file, $psr4Mappings, $projectRoot);
-            
+
             if (!$applicableMapping) {
                 continue;
             }
 
             $violation = $this->checkFileCompliance(
-                $file, 
-                $applicableMapping['namespace'], 
+                $file,
+                $applicableMapping['namespace'],
                 $applicableMapping['directory']
             );
-            
+
             if ($violation) {
-                if ($shouldFix && $violation['issue'] === 'Namespace mismatch') {
+                if ($shouldFix && 'Namespace mismatch' === $violation['issue']) {
                     $fixResult = $this->fixNamespaceInFile($file, $violation['expected']);
                     if ($fixResult) {
                         $fixed[] = $violation;
@@ -146,7 +156,7 @@ class NamespaceCheckerCommand extends Command
 
         $io->writeln("Analyzed {$totalFiles} PHP files");
         if (!empty($fixed)) {
-            $io->writeln("Fixed " . count($fixed) . " namespace mismatches");
+            $io->writeln('Fixed '.\count($fixed).' namespace mismatches');
         }
 
         return $violations;
@@ -159,24 +169,24 @@ class NamespaceCheckerCommand extends Command
 
         foreach ($psr4Mappings as $mapping) {
             $directory = $mapping['directory'];
-            
-            if ($directory === './' || $directory === '.') {
+
+            if ('./' === $directory || '.' === $directory) {
                 $fullDirectory = $projectRoot;
             } else {
-                $fullDirectory = $projectRoot . '/' . ltrim($directory, '/');
+                $fullDirectory = $projectRoot.'/'.ltrim($directory, '/');
                 $fullDirectory = rtrim($fullDirectory, '/');
             }
-            
+
             if (!is_dir($fullDirectory)) {
                 continue;
             }
-            
+
             $realPath = realpath($fullDirectory);
-            
-            if (!$realPath || in_array($realPath, $processedDirs)) {
+
+            if (!$realPath || \in_array($realPath, $processedDirs)) {
                 continue;
             }
-            
+
             $processedDirs[] = $realPath;
             $files = $this->findPhpFiles($fullDirectory);
             $allFiles = array_merge($allFiles, $files);
@@ -193,30 +203,30 @@ class NamespaceCheckerCommand extends Command
         foreach ($psr4Mappings as $mapping) {
             $namespacePrefix = $mapping['namespace'];
             $directory = $mapping['directory'];
-            
-            if ($directory === './' || $directory === '.') {
+
+            if ('./' === $directory || '.' === $directory) {
                 $fullDirectory = $projectRoot;
             } else {
-                $fullDirectory = $projectRoot . '/' . ltrim($directory, '/');
+                $fullDirectory = $projectRoot.'/'.ltrim($directory, '/');
                 $fullDirectory = rtrim($fullDirectory, '/');
             }
-            
+
             $realDirectory = realpath($fullDirectory);
-            
+
             if (!$realDirectory) {
                 continue;
             }
 
             $realFilePath = realpath($filePath);
-            
+
             if (str_starts_with($realFilePath, $realDirectory)) {
-                $pathLength = strlen($realDirectory);
-                
+                $pathLength = \strlen($realDirectory);
+
                 if ($pathLength > $longestPath) {
                     $longestPath = $pathLength;
                     $bestMatch = [
                         'namespace' => $namespacePrefix,
-                        'directory' => $fullDirectory
+                        'directory' => $fullDirectory,
                     ];
                 }
             }
@@ -233,50 +243,81 @@ class NamespaceCheckerCommand extends Command
 
         $files = [];
         $directoryIterator = new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS);
-        
+
         $filteredIterator = new \RecursiveCallbackFilterIterator(
             $directoryIterator,
             function ($current, $key, $iterator) {
                 if ($iterator->hasChildren()) {
                     $dirname = $current->getFilename();
-                    return !in_array($dirname, ['var', 'vendor']);
+
+                    return !\in_array($dirname, ['var', 'vendor']);
                 }
+
                 return true;
             }
         );
-        
+
         $iterator = new \RecursiveIteratorIterator($filteredIterator);
 
         foreach ($iterator as $file) {
-            if ($file->getExtension() === 'php') {
-                $files[] = $file->getPathname();
+            if ('php' === $file->getExtension()) {
+                $filePath = $file->getPathname();
+                if (!$this->isFileExcluded($filePath)) {
+                    $files[] = $filePath;
+                }
             }
         }
 
         return $files;
     }
 
+    private function isFileExcluded(string $filePath): bool
+    {
+        $relativePath = $this->getRelativePathFromProjectRoot($filePath);
+
+        foreach (self::EXCLUDED_FILES as $excludedFile) {
+            if (str_ends_with($relativePath, $excludedFile)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function getRelativePathFromProjectRoot(string $filePath): string
+    {
+        $projectRoot = getcwd();
+        $realFilePath = realpath($filePath);
+        $realProjectRoot = realpath($projectRoot);
+
+        if (!$realFilePath || !$realProjectRoot) {
+            return $filePath;
+        }
+
+        return substr($realFilePath, \strlen($realProjectRoot) + 1);
+    }
+
     private function checkFileCompliance(string $filePath, string $namespacePrefix, string $baseDirectory): ?array
     {
         $actualNamespace = $this->extractNamespaceFromFile($filePath);
-        
+
         if (!$actualNamespace) {
             return [
                 'file' => $filePath,
                 'issue' => 'No namespace declaration found',
                 'expected' => 'N/A',
-                'actual' => 'N/A'
+                'actual' => 'N/A',
             ];
         }
 
         $expectedNamespace = $this->calculateExpectedNamespace($filePath, $namespacePrefix, $baseDirectory);
-        
+
         if ($actualNamespace !== $expectedNamespace) {
             return [
                 'file' => $filePath,
                 'issue' => 'Namespace mismatch',
                 'expected' => $expectedNamespace,
-                'actual' => $actualNamespace
+                'actual' => $actualNamespace,
             ];
         }
 
@@ -286,7 +327,7 @@ class NamespaceCheckerCommand extends Command
     private function extractNamespaceFromFile(string $filePath): ?string
     {
         $content = file_get_contents($filePath);
-        
+
         if (preg_match('/^namespace\s+([^;]+);/m', $content, $matches)) {
             return trim($matches[1]);
         }
@@ -297,31 +338,31 @@ class NamespaceCheckerCommand extends Command
     private function calculateExpectedNamespace(string $filePath, string $namespacePrefix, string $baseDirectory): string
     {
         $relativePath = $this->getRelativePath($filePath, $baseDirectory);
-        $pathParts = explode('/', dirname($relativePath));
-        
-        $namespaceParts = array_filter($pathParts, fn($part) => $part !== '.');
-        
+        $pathParts = explode('/', \dirname($relativePath));
+
+        $namespaceParts = array_filter($pathParts, fn ($part) => '.' !== $part);
+
         $namespacePrefix = rtrim($namespacePrefix, '\\');
-        
+
         if (empty($namespaceParts)) {
             return $namespacePrefix;
         }
 
-        return $namespacePrefix . '\\' . implode('\\', $namespaceParts);
+        return $namespacePrefix.'\\'.implode('\\', $namespaceParts);
     }
 
     private function getRelativePath(string $filePath, string $baseDirectory): string
     {
         $realFilePath = realpath($filePath);
         $realBaseDirectory = realpath($baseDirectory);
-        
-        return substr($realFilePath, strlen($realBaseDirectory) + 1);
+
+        return substr($realFilePath, \strlen($realBaseDirectory) + 1);
     }
 
     private function fixNamespaceInFile(string $filePath, string $expectedNamespace): bool
     {
         $content = file_get_contents($filePath);
-        
+
         $updatedContent = preg_replace(
             '/^namespace\s+[^;]+;/m',
             "namespace {$expectedNamespace};",
@@ -329,11 +370,11 @@ class NamespaceCheckerCommand extends Command
             1,
             $count
         );
-        
+
         if ($count > 0 && $updatedContent !== $content) {
-            return file_put_contents($filePath, $updatedContent) !== false;
+            return false !== file_put_contents($filePath, $updatedContent);
         }
-        
+
         return false;
     }
 
@@ -341,24 +382,25 @@ class NamespaceCheckerCommand extends Command
     {
         if (empty($violations)) {
             $io->success('All files comply with PSR-4 namespace rules!');
+
             return;
         }
 
-        $fixableViolations = array_filter($violations, fn($v) => $v['issue'] === 'Namespace mismatch');
-        $unfixableViolations = array_filter($violations, fn($v) => $v['issue'] !== 'Namespace mismatch');
+        $fixableViolations = array_filter($violations, fn ($v) => 'Namespace mismatch' === $v['issue']);
+        $unfixableViolations = array_filter($violations, fn ($v) => 'Namespace mismatch' !== $v['issue']);
 
         if (!empty($fixableViolations)) {
             if ($shouldFix) {
-                $io->error(sprintf('Found %d PSR-4 compliance violations that could not be automatically fixed:', count($fixableViolations)));
+                $io->error(\sprintf('Found %d PSR-4 compliance violations that could not be automatically fixed:', \count($fixableViolations)));
             } else {
-                $io->warning(sprintf('Found %d namespace mismatches that can be automatically fixed with --fix option:', count($fixableViolations)));
+                $io->warning(\sprintf('Found %d namespace mismatches that can be automatically fixed with --fix option:', \count($fixableViolations)));
             }
 
             $this->displayViolationsTable($fixableViolations, $io);
         }
 
         if (!empty($unfixableViolations)) {
-            $io->error(sprintf('Found %d violations that require manual attention:', count($unfixableViolations)));
+            $io->error(\sprintf('Found %d violations that require manual attention:', \count($unfixableViolations)));
             $this->displayViolationsTable($unfixableViolations, $io);
         }
 
@@ -376,7 +418,7 @@ class NamespaceCheckerCommand extends Command
                 $violation['file'],
                 $violation['issue'],
                 $violation['expected'],
-                $violation['actual']
+                $violation['actual'],
             ];
         }
 
