@@ -22,6 +22,10 @@ class CodeToolManager
 
         $branchArgument = $input->getOption(CodeAnalyserCommandConfigurator::BRANCH_FORMAT_OPTION);
 
+        if (null !== $branchArgument && !\is_string($branchArgument)) {
+            throw new \LogicException('Branch argument is not a string');
+        }
+
         if (null !== $branchArgument) {
             $gitFiles = GitFilesManager::getCurrentBranchFiles($branchArgument);
         } else {
@@ -48,7 +52,7 @@ class CodeToolManager
     {
         foreach ($files as $file) {
             if (!file_exists($file)) {
-                throw new \LogicException(sprintf('File "%s" does not exist', $file));
+                throw new \LogicException(\sprintf('File "%s" does not exist', $file));
             }
         }
     }
