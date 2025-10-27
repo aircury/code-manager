@@ -10,6 +10,7 @@ class CodeAnalyserCommandConfigurator
     public const string FILES_ARGUMENT = 'files';
     public const string BRANCH_FORMAT_OPTION = 'branch';
     public const string LEVEL_OPTION = 'level';
+    public const string NO_BASELINE_OPTION= 'no-baseline';
 
     public static function configureCommand(CodeAnalyserCommand $command): void
     {
@@ -17,6 +18,7 @@ class CodeAnalyserCommandConfigurator
             ->addArgument(self::FILES_ARGUMENT, InputArgument::IS_ARRAY, 'Specify files that you want to format')
             ->addOption(self::BRANCH_FORMAT_OPTION, 'b', InputOption::VALUE_REQUIRED, 'Run the formatter in your branch new files relative to the specified branch')
             ->addOption(self::LEVEL_OPTION, 'l', InputOption::VALUE_OPTIONAL, 'Specify level to run the analyser')
+            ->addOption(self::NO_BASELINE_OPTION, 'x', InputOption::VALUE_NONE, 'Specify no baseline to run')
         ;
     }
 }

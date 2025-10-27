@@ -13,7 +13,8 @@ class CodeAnalyserManager
     private const string LEVEL_COMMAND_OPTION = '--level';
     private const string QUIET_COMMAND_OPTION = '--quiet';
     private const string COMMAND_SEPARATOR = ' ';
-    private const string CONFIGURATION_FILE = 'phpstan.neon.php';
+    private const string CONFIG_FILE = 'phpstan.neon.php';
+    private const string CONFIG_FILE_WITH_BASELINE = 'phpstan.neon.with_baseline.php';
 
     /**
      * @param array<string> $files
@@ -42,7 +43,9 @@ class CodeAnalyserManager
     {
         $commandOptions = [];
 
-        $configurationFile = self::getConfigurationFile();
+        $baselineEnabled = !$input->getOption(CodeAnalyserCommandConfigurator::NO_BASELINE_OPTION);
+
+        $configurationFile = self::getConfigurationFile($baselineEnabled);
 
         $commandOptions[] = sprintf('%s=%s', self::CONFIG_FILE_COMMAND_OPTION, $configurationFile);
 
@@ -61,14 +64,20 @@ class CodeAnalyserManager
         return implode(self::COMMAND_SEPARATOR, $commandOptions);
     }
 
-    private static function getConfigurationFile(): string
+    private static function getConfigurationFile(bool $baselineEnabled): string
     {
-        $configurationFile = sprintf('%s%s%s', __DIR__, DIRECTORY_SEPARATOR, self::CONFIGURATION_FILE);
+        $configFile = self::CONFIG_FILE;
 
-        if (file_exists($configurationFile)) {
-            return $configurationFile;
+        if ($baselineEnabled && file_exists(__DIR__ . DIRECTORY_SEPARATOR . self::CONFIG_FILE_WITH_BASELINE)) {
+            $configFile = self::CONFIG_FILE_WITH_BASELINE;
         }
 
-        throw new \LogicException('Configuration file not found');
+        $configPath = __DIR__ . DIRECTORY_SEPARATOR . $configFile;
+
+        if (!file_exists($configPath)) {
+            throw new \LogicException('Configuration file not found');
+        }
+
+        return $configPath;
     }
 }
