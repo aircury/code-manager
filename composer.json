@@ -5,17 +5,27 @@
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "Aircury\\CodeManager\\": "src/"
+            "Aircury\\CodeManager\\": "src/",
+            "Aircury\\PHPStan\\": "phpstan/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Aircury\\PHPStan\\Tests\\": "tests/"
         }
     },
     "require": {
         "symfony/console": "~6.0|~7.0",
-        "phpstan/phpstan": "~1.0|~2.0",
-        "phpstan/phpstan-doctrine": "~1.0|~2.0",
+        "phpstan/phpstan": "^2.1.11",
+        "phpstan/phpstan-doctrine": "^2.0",
         "friendsofphp/php-cs-fixer": "~3.46",
-        "symfony/yaml": "~6.0|~7.0"
+        "symfony/yaml": "~6.0|~7.0",
+        "tomasvotruba/cognitive-complexity": "^1.3"
     },
     "bin": [
         "code-manager"
-    ]
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    }
 }

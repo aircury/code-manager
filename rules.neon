@@ -1,0 +1,39 @@
+includes:
+    # PHP so the path resolves both inside this repository and from vendor/aircury/code-manager.
+    - rules.cognitive-complexity.php
+
+parametersSchema:
+    aircury: structure([
+        fileLength: structure([maxLines: int()])
+        cyclomaticComplexity: structure([maxComplexity: int()])
+        duplicateMethod: structure([minStatements: int()])
+    ])
+
+parameters:
+    aircury:
+        fileLength:
+            maxLines: 800
+        cyclomaticComplexity:
+            maxComplexity: 10
+        duplicateMethod:
+            minStatements: 5
+
+services:
+    -
+        class: Aircury\PHPStan\Rules\FileLengthRule
+        arguments:
+            maxLines: %aircury.fileLength.maxLines%
+        tags: [phpstan.rules.rule]
+    -
+        class: Aircury\PHPStan\Rules\CyclomaticComplexityRule
+        arguments:
+            maxComplexity: %aircury.cyclomaticComplexity.maxComplexity%
+        tags: [phpstan.rules.rule]
+    -
+        class: Aircury\PHPStan\Collectors\MethodBodyHashCollector
+        arguments:
+            minStatements: %aircury.duplicateMethod.minStatements%
+        tags: [phpstan.collector]
+    -
+        class: Aircury\PHPStan\Rules\DuplicateMethodRule
+        tags: [phpstan.rules.rule]
