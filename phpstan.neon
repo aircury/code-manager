@@ -1,0 +1,11 @@
+includes:
+    - rules.neon
+
+parameters:
+    level: max
+    paths:
+        - phpstan
+        - tests
+        - rules.cognitive-complexity.php
+    excludePaths:
+        - tests/Fixtures
